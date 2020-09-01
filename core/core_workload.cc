@@ -91,14 +91,14 @@ void CoreWorkload::Init(const utils::Properties &p) {
   double readmodifywrite_proportion = std::stod(p.GetProperty(
       READMODIFYWRITE_PROPORTION_PROPERTY, READMODIFYWRITE_PROPORTION_DEFAULT));
   
-  record_count_ = std::stoi(p.GetProperty(RECORD_COUNT_PROPERTY));
+  record_count_ = std::stoull(p.GetProperty(RECORD_COUNT_PROPERTY));
   std::string request_dist = p.GetProperty(REQUEST_DISTRIBUTION_PROPERTY,
                                            REQUEST_DISTRIBUTION_DEFAULT);
   int max_scan_len = std::stoi(p.GetProperty(MAX_SCAN_LENGTH_PROPERTY,
                                              MAX_SCAN_LENGTH_DEFAULT));
   std::string scan_len_dist = p.GetProperty(SCAN_LENGTH_DISTRIBUTION_PROPERTY,
                                             SCAN_LENGTH_DISTRIBUTION_DEFAULT);
-  int insert_start = std::stoi(p.GetProperty(INSERT_START_PROPERTY,
+  uint64_t insert_start = std::stoull(p.GetProperty(INSERT_START_PROPERTY,
                                              INSERT_START_DEFAULT));
   
   read_all_fields_ = utils::StrToBool(p.GetProperty(READ_ALL_FIELDS_PROPERTY,
@@ -141,8 +141,8 @@ void CoreWorkload::Init(const utils::Properties &p) {
     // that is larger than what exists at the beginning of the test.
     // If the generator picks a key that is not inserted yet, we just ignore it
     // and pick another key.
-    int op_count = std::stoi(p.GetProperty(OPERATION_COUNT_PROPERTY));
-    int new_keys = (int)(op_count * insert_proportion * 2); // a fudge factor
+    uint64_t op_count = std::stoull(p.GetProperty(OPERATION_COUNT_PROPERTY));
+    uint64_t new_keys = (uint64_t)(op_count * insert_proportion * 2); // a fudge factor
     key_chooser_ = new ScrambledZipfianGenerator(record_count_ + new_keys);
     
   } else if (request_dist == "latest") {

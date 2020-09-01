@@ -183,7 +183,7 @@ class CoreWorkload {
   Generator<uint64_t> *scan_len_chooser_;
   CounterGenerator insert_key_sequence_;
   bool ordered_inserts_;
-  size_t record_count_;
+  uint64_t record_count_;
 };
 
 inline std::string CoreWorkload::NextSequenceKey() {

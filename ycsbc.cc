@@ -23,12 +23,15 @@ void UsageMessage(const char *command);
 bool StrStartWith(const char *str, const char *pre);
 string ParseCommandLine(int argc, const char *argv[], utils::Properties &props);
 
-int DelegateClient(ycsbc::DB *db, ycsbc::CoreWorkload *wl, const int num_ops,
+uint64_t DelegateClient(ycsbc::DB *db, ycsbc::CoreWorkload *wl, const uint64_t num_ops,
     bool is_loading) {
   db->Init();
   ycsbc::Client client(*db, *wl);
-  int oks = 0;
-  for (int i = 0; i < num_ops; ++i) {
+  uint64_t oks = 0;
+  for (uint64_t i = 0; i < num_ops; ++i) {
+    if(i % 1000000 == 0){
+      cerr << "finished ops: "<< i <<"\r";
+    }
     if (is_loading) {
       oks += client.DoInsert();
     } else {
@@ -55,15 +58,15 @@ int main(const int argc, const char *argv[]) {
   const int num_threads = stoi(props.GetProperty("threadcount", "1"));
 
   // Loads data
-  vector<future<int>> actual_ops;
-  int total_ops = stoi(props[ycsbc::CoreWorkload::RECORD_COUNT_PROPERTY]);
+  vector<future<uint64_t>> actual_ops;
+  uint64_t total_ops = stoull(props[ycsbc::CoreWorkload::RECORD_COUNT_PROPERTY]);
   for (int i = 0; i < num_threads; ++i) {
     actual_ops.emplace_back(async(launch::async,
         DelegateClient, db, &wl, total_ops / num_threads, true));
   }
   assert((int)actual_ops.size() == num_threads);
 
-  int sum = 0;
+  uint64_t sum = 0;
   for (auto &n : actual_ops) {
     assert(n.valid());
     sum += n.get();
