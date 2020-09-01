@@ -174,9 +174,13 @@ int TitanDB::Delete(const std::string &table, const std::string &key) {
 
 void TitanDB::printStats() {
   string stats;
+  cout << ">> db stats <<" << endl;
   db_->GetProperty("rocksdb.stats", &stats);
   cout << stats << endl;
 }
 
-TitanDB::~TitanDB() { delete db_; }
+TitanDB::~TitanDB() {
+  printStats();
+  delete db_;
+}
 }  // namespace ycsbc
