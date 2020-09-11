@@ -52,19 +52,19 @@ TitanDB::TitanDB(const char *dbfilename) : noResult(0) {
   nowal = !options.level_merge;
   options.max_background_gc = config.getGCThreads();
   //   options.block_write_size = blockWriteSize;
-  //   std::cerr << "block write size " << options.block_write_size <<
-  //   std::endl;
+  //   cerr << "block write size " << options.block_write_size <<
+  //   endl;
   options.blob_file_discardable_ratio = gcRatio;
   if (options.level_merge) {
     // options.base_level_for_dynamic_level_bytes = 4;
     options.level_compaction_dynamic_level_bytes = true;
     // options.num_foreground_builders = 1;
-    std::cerr << "set intro compaction true" << std::endl;
+    cerr << "set intro compaction true" << endl;
     // options.intra_compact_small_l0 = true;
   }
 
-  //   std::cerr << "intro compaction " << options.intra_compact_small_l0
-  //             << std::endl;
+  //   cerr << "intro compaction " << options.intra_compact_small_l0
+  //             << endl;
 
   // options.sep_before_flush = config.getSepBeforeFlush();
   if (config.getTiered())
@@ -80,47 +80,46 @@ TitanDB::TitanDB(const char *dbfilename) : noResult(0) {
     cerr << "Can't open titandb " << dbfilename << endl;
     exit(0);
   }
-  cout << "dbname " << dbfilename << "\nbloom bits:" << bloomBits
+  cerr << "dbname " << dbfilename << "\nbloom bits:" << bloomBits
        << "bits\ndirectIO:" << (bool)directIO
        << "\nseekCompaction:" << (bool)seekCompaction
        << "dynamic level:" << options.level_compaction_dynamic_level_bytes
        << endl;
 }
 
-int TitanDB::Read(const std::string &table, const std::string &key,
-                  const std::vector<std::string> *fields,
-                  std::vector<KVPair> &result) {
+int TitanDB::Read(const string &table, const string &key,
+                  const vector<string> *fields, vector<KVPair> &result) {
   string value;
-  static std::atomic<uint64_t> miss{0};
+  static atomic<uint64_t> miss{0};
   rocksdb::Status s = db_->Get(rocksdb::ReadOptions(), key, &value);
   if (s.ok()) return DB::kOK;
   if (s.IsNotFound()) {
     noResult++;
     if (noResult % 1000 == 0) {
-      cout << noResult << endl;
+      cerr << noResult << endl;
     }
     return DB::kOK;
   } else {
     miss += 1;
     if (miss.load() % 1000 == 0) {
-      std::cout << "miss " << miss << "values" << std::endl;
-      std::cout << "last reason: " << s.ToString() << std::endl;
+      cerr << "miss " << miss << "values" << endl;
+      cerr << "last reason: " << s.ToString() << endl;
     }
     return DB::kOK;
   }
 }
 
-int TitanDB::Scan(const std::string &table, const std::string &key, int len,
-                  const std::vector<std::string> *fields,
-                  std::vector<std::vector<KVPair>> &result) {
+int TitanDB::Scan(const string &table, const string &key, int len,
+                  const vector<string> *fields,
+                  vector<vector<KVPair>> &result) {
   int i;
   int cnt = 0;
 
   auto it = db_->NewIterator(rocksdb::ReadOptions());
   it->Seek(key);
-  
-  std::string val;
-  std::string k;
+
+  string val;
+  string k;
   for (i = 0; i < len && it->Valid(); i++) {
     // cnt++;
     k = it->key().ToString();
@@ -129,25 +128,25 @@ int TitanDB::Scan(const std::string &table, const std::string &key, int len,
     if (val.size() == 0) cnt++;
   }
   if (cnt > 0) {
-    std::cout << "[scan] missed " << cnt << " vals for length " << len << "."
-              << std::endl;
-    std::cerr << "[scan] missed " << cnt << " vals for length " << len << "."
-              << std::endl;
+    cerr << "[scan] missed " << cnt << " vals for length " << len << "."
+         << endl;
+    cerr << "[scan] missed " << cnt << " vals for length " << len << "."
+         << endl;
   } else if (i < len) {
-    std::cout << "[scan] get " << i << " for length " << len << "." << std::endl;
-    std::cerr << "[scan] get " << i << " for length " << len << "." << std::endl;
+    cerr << "[scan] get " << i << " for length " << len << "." << endl;
+    cerr << "[scan] get " << i << " for length " << len << "." << endl;
   }
   delete it;
 
-  //   std::vector<std::string> keys;
-  //   std::vector<std::string> vals;
+  //   vector<string> keys;
+  //   vector<string> vals;
   //   i = db_->Scan(rocksdb::ReadOptions(), key, len, keys, vals);
 
   return DB::kOK;
 }
 
-int TitanDB::Insert(const std::string &table, const std::string &key,
-                    std::vector<KVPair> &values) {
+int TitanDB::Insert(const string &table, const string &key,
+                    vector<KVPair> &values) {
   rocksdb::Status s;
   auto op = rocksdb::WriteOptions();
   op.disableWAL = nowal;
@@ -162,21 +161,21 @@ int TitanDB::Insert(const std::string &table, const std::string &key,
   return DB::kOK;
 }
 
-int TitanDB::Update(const std::string &table, const std::string &key,
-                    std::vector<KVPair> &values) {
+int TitanDB::Update(const string &table, const string &key,
+                    vector<KVPair> &values) {
   return Insert(table, key, values);
 }
 
-int TitanDB::Delete(const std::string &table, const std::string &key) {
+int TitanDB::Delete(const string &table, const string &key) {
   vector<DB::KVPair> values;
   return Insert(table, key, values);
 }
 
 void TitanDB::printStats() {
   string stats;
-  cout << ">> db stats <<" << endl;
+  cerr << ">> db stats <<" << endl;
   db_->GetProperty("rocksdb.stats", &stats);
-  cout << stats << endl;
+  cerr << stats << endl;
 }
 
 TitanDB::~TitanDB() {
