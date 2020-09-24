@@ -33,6 +33,7 @@ TitanDB::TitanDB(const char *dbfilename) : noResult(0) {
   options.create_if_missing = true;
   options.write_buffer_size = memtable;
   options.disable_background_gc = true;
+  options.use_direct_reads = false;
   options.compaction_pri = rocksdb::kMinOverlappingRatio;
   options.max_bytes_for_level_base = memtable;
   options.target_file_size_base = 16 << 20;
